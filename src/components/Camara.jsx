@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { Camera } from 'expo-camera';
 import * as MediaLibrary from 'expo-media-library'
 import { Entypo } from '@expo/vector-icons'
-import { Image, ImageBackground } from 'react-native-web';
+import { Image, ImageBackground } from 'react-native';
 
 const CameraApp = () => {
   const [hasCameraPermissions, setHasCameraPermissions] = useState(null)
@@ -13,7 +13,7 @@ const CameraApp = () => {
 
   useEffect(() => {
     (async () => {
-      // MediaLibrary.requestCameraPermissionsAsync()
+      MediaLibrary.requestCameraPermissionsAsync()
       const cameraStatus = await Camera.requestCameraPermissionsAsync()
       setHasCameraPermissions(cameraStatus.statatus === 'granted')
     })();
@@ -24,7 +24,7 @@ const CameraApp = () => {
       try {
         const data = await cameraRef.current.takePictureAsync();
         setImage(data.uri)
-        console.log(data)
+        console.log(data.uri)
       } catch (error) {
         console.log(error)
       }
@@ -45,7 +45,7 @@ const CameraApp = () => {
         </Camera>
         :
         <ImageBackground source={{uri: image}} style={styles.camera}>
-          <Pressable style={styles.buttonContainer}>        {/* Agregar funcionalidad de guardado */}
+          <Pressable style={styles.buttonContainer}>        
             <Entypo name='check' style={styles.buttonIcon}/>
             <Text style={styles.textButton}>Enviar</Text>
           </Pressable>
