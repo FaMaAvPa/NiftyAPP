@@ -17,12 +17,12 @@ const CameraApp = () => {
       const cameraStatus = await Camera.requestCameraPermissionsAsync()
       setHasCameraPermissions(cameraStatus.statatus === 'granted')
     })();
-  }, [,])
+  }, [])
 
   const takePicture = async () => {
     if (cameraRef) {
       try {
-        const data = await cameraRef.current.takePictureAsync()
+        const data = await cameraRef.current.takePictureAsync();
         setImage(data.uri)
         console.log(data)
       } catch (error) {
@@ -31,9 +31,9 @@ const CameraApp = () => {
     }
   }
 
-  if(hasCameraPermissions === false){
-    return <View style={styles.errorContainer}><Text style={styles.textErrorMessage}>Debes permitir el acceso a la camara</Text></View>
-  }
+  // if(hasCameraPermissions === false){
+  //   return <View style={styles.errorContainer}><Text style={styles.textErrorMessage}>Debes permitir el acceso a la camara</Text></View>
+  // }
 
   return (
     <View style={{ flex: 1 }}>
