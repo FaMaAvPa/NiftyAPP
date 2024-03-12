@@ -1,66 +1,105 @@
-import React, { useState, useRef } from 'react';
-import { View, TouchableOpacity, Text, Modal, Button, Image } from 'react-native';
-import { RNCamera } from 'react-native-camera';
-import ImagePicker from 'react-native-image-picker';
+import React, { useState, useRef, useEffect } from 'react';
+import { StyleSheet, View, Text, Pressable } from 'react-native';
+import { Camera } from 'expo-camera';
+import * as MediaLibrary from 'expo-media-library'
+import { Entypo } from '@expo/vector-icons'
+import { Image, ImageBackground } from 'react-native-web';
 
 const CameraApp = () => {
-  const cameraRef = useRef(null);
-  const [photoUri, setPhotoUri] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [hasCameraPermissions, setHasCameraPermissions] = useState(null)
+  const [image, setImage] = useState(null)
+  const cameraRef = useRef(null)
+  
+
+  useEffect(() => {
+    (async () => {
+      // MediaLibrary.requestCameraPermissionsAsync()
+      const cameraStatus = await Camera.requestCameraPermissionsAsync()
+      setHasCameraPermissions(cameraStatus.statatus === 'granted')
+    })();
+  }, [])
 
   const takePicture = async () => {
     if (cameraRef) {
-      const options = { quality: 0.5, base64: true };
-      const data = await cameraRef.current.takePictureAsync(options);
-      setPhotoUri(data.uri);
-      setModalVisible(true); // Mostrar el modal después de tomar la foto
-    }
-  };
-
-  const chooseImage = () => {
-    ImagePicker.launchImageLibrary({}, (response) => {
-      if (response.uri) {
-        setPhotoUri(response.uri);
-        setModalVisible(true); // Mostrar el modal después de seleccionar una imagen
+      try {
+        const data = await cameraRef.current.takePictureAsync();
+        setImage(data.uri)
+        console.log(data)
+      } catch (error) {
+        console.log(error)
       }
-    });
-  };
+    }
+  }
 
-  const closeModal = () => {
-    setModalVisible(false);
-    setPhotoUri(null); // Limpiar la URI de la foto
-  };
+  // if(hasCameraPermissions === false){
+  //   return <View style={styles.errorContainer}><Text style={styles.textErrorMessage}>Debes permitir el acceso a la camara</Text></View>
+  // }
 
   return (
     <View style={{ flex: 1 }}>
-      <RNCamera
-        ref={cameraRef}
-        style={{ flex: 1 }}
-        type={RNCamera.Constants.Type.front}
-        captureAudio={false}
-      />
-      <View style={{ flex: 0, flexDirection: 'row', justifyContent: 'center' }}>
-        <TouchableOpacity onPress={takePicture}>
-          <Text style={{ fontSize: 20, marginBottom: 10, color: 'white' }}>Capturar</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={chooseImage}>
-          <Text style={{ fontSize: 20, marginBottom: 10, color: 'white' }}>Seleccionar imagen</Text>
-        </TouchableOpacity>
-      </View>
-      <Modal
-        animationType="slide"
-        transparent={false}
-        visible={modalVisible}
-        onRequestClose={closeModal}
-      >
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          {photoUri && <Image source={{ uri: photoUri }} style={{ width: 200, height: 200 }} />}
-          <Button title="Guardar" onPress={closeModal} />
-          <Button title="Intentar de nuevo" onPress={closeModal} />
-        </View>
-      </Modal>
+      {!image ?
+        <Camera style={styles.camera} ref={cameraRef} type={Camera.Constants.Type.front} flashMode={'off'}>
+          <Pressable onPress={takePicture} style={styles.buttonContainer}>
+            <Entypo name='circle' style={styles.buttonIcon}></Entypo>
+          </Pressable>
+        </Camera>
+        :
+        <ImageBackground source={{uri: image}} style={styles.camera}>
+          <Pressable style={styles.buttonContainer}>        {/* Agregar funcionalidad de guardado */}
+            <Entypo name='check' style={styles.buttonIcon}/>
+            <Text style={styles.textButton}>Enviar</Text>
+          </Pressable>
+          <Pressable style={styles.buttonContainer} onPress={() => setImage(null)}>
+            <Entypo name='ccw' style={styles.buttonIcon}/>
+            <Text style={styles.textButton}>Reintentar</Text>
+          </Pressable>
+        </ImageBackground>
+      }
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  camera:{
+    flex: 1,
+    borderRadius: 20,
+    backgroundColor: '#000',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'flex-end',
+  },
+  container:{
+    flex: 1,
+    backgroundColor: '#000'
+  },
+  image:{
+    flex: 1,
+    backgroundColor: '#190'
+  },
+  buttonIcon:{
+    fontSize: 40,
+    color: '#f1f1f1'
+    
+  },
+  textButton:{
+    color: '#f1f1f1',
+    fontSize: 15
+  },
+  buttonContainer:{
+    alignItems: 'center',
+    marginBottom: 20
+  },
+  textErrorMessage:{
+    color: '#900',
+    fontWeight: 'bold',
+    // fontSize: '10'
+  },
+  errorContainer:{
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
+})
 
 export default CameraApp;
