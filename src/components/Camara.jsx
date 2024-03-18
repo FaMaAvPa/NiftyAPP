@@ -1,40 +1,49 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { StyleSheet, View, Text, Pressable, ImageBackground } from 'react-native';
-import Svg, { Ellipse } from 'react-native-svg';
 import Constants from 'expo-constants';
-import { Camera, CameraType, FlashMode } from 'expo-camera';
-import * as MediaLibrary from 'expo-media-library'
+import { Camera} from 'expo-camera';
 import * as FaceDetector from 'expo-face-detector'
 import { Entypo } from '@expo/vector-icons'
-import CircularProgress from 'react-native-circular-progress-indicator';
+
+import OvalProgressIndicator  from './OvalProgressIndicator';
+
 
 const CameraApp = () => {
   const [hasCameraPermissions, setHasCameraPermissions] = useState(null)
   const [image, setImage] = useState(null)
-  const [type, setType] = useState(Camera.Constants.Type.front)
-  const [flash, setflash] = useState(Camera.Constants.FlashMode.off)
   const cameraRef = useRef(null)
   
   const [detectedFaces, setDetectedFaces] = useState([])
 
+  const [progress, setProgress] = useState(0.5)
+
   useEffect(() => {
     (async () => {
-      MediaLibrary.requestCameraPermissionsAsync()
       const cameraStatus = await Camera.requestCameraPermissionsAsync()
-      setHasCameraPermissions(cameraStatus.statatus === 'granted')
+      console.log(cameraStatus.status)
+      setHasCameraPermissions(cameraStatus.status === 'granted')
     })();
   }, [])
+  
+  const permissionsFunction = async () => {
+    console.log('boton apretado')
+    const cameraStatus = await Camera.requestCameraPermissionsAsync();
+    console.log(cameraStatus.status)
+    setHasCameraPermissions(cameraStatus.status === 'granted');
+  };
 
   const takePicture = async () => {
-    if (cameraRef) {
-      try {
-        const data = await cameraRef.current.takePictureAsync();
-        setImage(data.uri)
-        console.log(data.uri)
-      } catch (error) {
-        console.log(error)
-      }
-    }
+    // if (cameraRef) {
+    //   try {
+    //     const data = await cameraRef.current.takePictureAsync();
+    //     setImage(data.uri)
+        setProgress(progress + 0.1)
+        console.log(progress)
+    //     console.log(data.uri)
+    //   } catch (error) {
+    //     console.log(error)
+    //   }
+    // }
   }
 
   const handleFaceDetected = ({ faces }) => {
@@ -53,7 +62,19 @@ const CameraApp = () => {
   }
 
   // if(hasCameraPermissions === false){
-  //   return <View style={styles.errorContainer}><Text style={styles.textErrorMessage}>Debes permitir el acceso a la camara</Text></View>
+  //   return (
+  //     <View style={styles.errorContainer}>
+  //       <Text style={styles.textErrorMessage}>Debes permitir el acceso a la camara</Text>
+  //       <Pressable onPress={permissionsFunction}><Text style={styles.textErrorMessage}>Permitir Acceso</Text></Pressable>
+  //       <Text>Para poder utilizar todas las funciones de nuestra aplicación, necesitamos acceso a la cámara. Por favor, habilita los permisos de la cámara desde la configuración de tu dispositivo:</Text>
+  //         <Text>1 - Abre la aplicación de Configuración en tu dispositivo.</Text>
+  //         <Text>2 - Busca y selecciona 'Aplicaciones' o 'Administrador de aplicaciones'.</Text>
+  //         <Text>3 - Encuentra nuestra aplicación en la lista y selecciónala.</Text>
+  //         <Text>4 - Dentro de la configuración de la aplicación, busca la sección de permisos.</Text>
+  //         <Text>5 - Habilita los permisos de la cámara.</Text>
+  //         <Text>Una vez que hayas habilitado los permisos de la cámara, podrás disfrutar de todas las funciones de nuestra aplicación.</Text>
+  //     </View>
+  //   )
   // }
 
   return (
@@ -63,8 +84,8 @@ const CameraApp = () => {
           <Camera 
             style={styles.camera} 
             ref={cameraRef} 
-            type={type} 
-            flashMode={flash}
+            type={Camera.Constants.Type.front} 
+            flashMode={Camera.Constants.FlashMode.off}
             onFacesDetected={handleFaceDetected}
             faceDetectorSettings={{
               mode: FaceDetector.FaceDetectorMode.accurate,
@@ -74,20 +95,8 @@ const CameraApp = () => {
               tracking: true
             }}>
               {renderFaceBoxes()}
-            <View style={styles.rombo}>
-              {/* <Svg height={'100%'} width={'100%'} >
-                <Ellipse cx="50%" cy="50%" rx="80" ry="100" fill="transparent" stroke="black" strokeWidth="4" style={styles.elipse}></Ellipse>
-              </Svg> */}
-            <CircularProgress
-              value={0}
-              radius={120}
-              duration={2000}
-              progressValueColor={'#ecf0f1'}
-              maxValue={10}
-              strokeLinecap='square'
-              style={styles.progress}
-              width={100}
-            />
+            <View style={styles.filtro}>
+              <OvalProgressIndicator propProgress={progress} style={styles.container}/> 
             </View>
           </Camera>
           <Pressable onPress={takePicture} style={[styles.buttonContainer]}>
@@ -111,17 +120,13 @@ const CameraApp = () => {
 };
 
 const styles = StyleSheet.create({
-  progress:{
-    height: 100,
-    width: 200
-  },
   elipse:{
     backgroundColor: 'rgba(256, 256, 256, 0.0)',
   },
   container:{ 
     flex: 1 , 
     paddingTop: Constants.statusBarHeight, 
-    backgroundColor: '#000'
+    // backgroundColor: '#000'
   },
   imageBackground:{
     flex: 1,
@@ -140,7 +145,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginVertical: 100
   },
-  rombo:{
+  filtro:{
     backgroundColor: 'rgba(256, 256, 256, 0.8)',
     flex: 1,
     justifyContent: 'center',
@@ -176,11 +181,11 @@ const styles = StyleSheet.create({
   textErrorMessage:{
     color: '#900',
     fontWeight: 'bold',
-    // fontSize: '10'
+    // fontSize: '40'
   },
   errorContainer:{
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
   }
